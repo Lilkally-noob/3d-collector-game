@@ -60,3 +60,42 @@ body {
 #startBtn:hover {
   background: #ff7f50;
 }
+
+body {
+  touch-action: none;
+}
+
+/* stops the page from scrolling/zooming while you play */
+
+#joystick {
+  display: none;
+  /* hidden on desktop */
+  position: fixed;
+  bottom: 40px;
+  left: 40px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  touch-action: none;
+}
+
+#stick {
+  position: absolute;
+  left: 35px;
+  top: 35px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+@media (pointer: coarse) {
+  #joystick {
+    display: block;
+  }
+
+  /* only show on touch devices */
+}

@@ -150,6 +150,47 @@ function endGame() {
 
 startBtn.addEventListener('click', startGame);
 
+// Touch joystick
+const joystickEl = document.getElementById('joystick');
+const stickEl = document.getElementById('stick');
+const joy = { x: 0, z: 0 }; // values from -1 to 1
+const JOY_RADIUS = 45;
+let joyPointerId = null;
+
+function updateJoystick(e) {
+  const rect = joystickEl.getBoundingClientRect();
+  let dx = e.clientX - (rect.left + rect.width / 2);
+  let dy = e.clientY - (rect.top + rect.height / 2);
+
+  const dist = Math.hypot(dx, dy);
+  if (dist > JOY_RADIUS) {
+    dx = (dx / dist) * JOY_RADIUS;
+    dy = (dy / dist) * JOY_RADIUS;
+  }
+
+  stickEl.style.transform = `translate(${dx}px, ${dy}px)`;
+  joy.x = dx / JOY_RADIUS;
+  joy.z = dy / JOY_RADIUS; // dragging down = +z = toward the camera
+}
+
+function resetJoystick() {
+  joyPointerId = null;
+  joy.x = 0;
+  joy.z = 0;
+  stickEl.style.transform = 'translate(0px, 0px)';
+}
+
+joystickEl.addEventListener('pointerdown', (e) => {
+  joyPointerId = e.pointerId;
+  joystickEl.setPointerCapture(e.pointerId);
+  updateJoystick(e);
+});
+joystickEl.addEventListener('pointermove', (e) => {
+  if (e.pointerId === joyPointerId) updateJoystick(e);
+});
+joystickEl.addEventListener('pointerup', resetJoystick);
+joystickEl.addEventListener('pointercancel', resetJoystick);
+
 // Game loop
 let lastTime = performance.now();
 
@@ -168,14 +209,19 @@ function animate(currentTime) {
     if (keys['KeyS'] || keys['ArrowDown']) moveZ += 1;
     if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
     if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
+    
+if (moveX !== 0 || moveZ !== 0) {
+  const length = Math.hypot(moveX, moveZ);
+  moveX /= length;
+  moveZ /= length;
+} else {
+  // no keys held: fall back to the joystick
+  moveX = joy.x;
+  moveZ = joy.z;
+}
 
-    if (moveX !== 0 || moveZ !== 0) {
-      const length = Math.hypot(moveX, moveZ);
-      moveX /= length;
-      moveZ /= length;
-      player.position.x += moveX * PLAYER_SPEED * delta;
-      player.position.z += moveZ * PLAYER_SPEED * delta;
-    }
+player.position.x += moveX * PLAYER_SPEED * delta;
+player.position.z += moveZ * PLAYER_SPEED * delta;
 
     player.position.x = THREE.MathUtils.clamp(player.position.x, -BOUNDARY, BOUNDARY);
     player.position.z = THREE.MathUtils.clamp(player.position.z, -BOUNDARY, BOUNDARY);
