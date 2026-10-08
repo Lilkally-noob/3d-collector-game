@@ -1,6 +1,6 @@
 import './style.css';
 import * as THREE from 'three';
-import { scene, camera, renderer } from './core.js';
+import { scene, camera, render } from './core.js';
 import { BOUNDARY } from './arena.js';
 import { keys, joy } from './input.js';
 import { createPlayer } from './player.js';
@@ -116,7 +116,7 @@ function animate(currentTime) {
 
   animateGems(delta, currentTime / 1000);
 
-  renderer.render(scene, camera);
+  render(delta);
 }
 
 requestAnimationFrame(animate);

@@ -6,9 +6,12 @@ const COLLECTIBLE_COUNT = 5;
 
 const collectibleGeometry = new THREE.OctahedronGeometry(0.4);
 const collectibleMaterial = new THREE.MeshStandardMaterial({
-    color: 0xffd23f,
-    emissive: 0xffa800,
-    emissiveIntensity: 0.3,
+    color: 0x4df2ff,
+    emissive: 0x4df2ff,
+    emissiveIntensity: 2.0,
+    metalness: 0.3,
+    roughness: 0.15,
+    flatShading: true,
 });
 
 export function randomArenaPosition() {
