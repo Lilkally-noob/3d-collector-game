@@ -14,6 +14,7 @@ scene.add(player);
 const PLAYER_SPEED = 8;
 const COLLECT_DISTANCE = 1.0;
 const GAME_DURATION = 30;
+const BAD_PENALTY = 5;
 
 // Camera follow
 const cameraOffset = new THREE.Vector3(0, 10, 12);
@@ -27,6 +28,13 @@ const overlayEl = document.getElementById('overlay');
 const overlayTitleEl = document.getElementById('overlayTitle');
 const overlayTextEl = document.getElementById('overlayText');
 const startBtn = document.getElementById('startBtn');
+const flashEl = document.getElementById('flash');
+
+function flashRed() {
+  flashEl.classList.remove('active');
+  void flashEl.offsetWidth; // forces the browser to reset so the animation can replay
+  flashEl.classList.add('active');
+}
 
 // Game state
 let state = 'menu'; // 'menu' | 'playing' | 'gameover'
@@ -41,7 +49,7 @@ function startGame() {
 
   player.position.set(0, 0.5, 0);
   for (const k in keys) keys[k] = false;
-  for (const c of collectibles) respawnCollectible(c);
+  for (const c of collectibles) respawnCollectible(c, player.position);
 
   overlayEl.classList.add('hidden');
   startBtn.blur();
@@ -51,7 +59,7 @@ function startGame() {
 function endGame() {
   state = 'gameover';
   overlayTitleEl.textContent = "Time's up!";
-  overlayTextEl.textContent = `You collected ${score} gems.`;
+  overlayTextEl.textContent = `Final score: ${score}`;
   startBtn.textContent = 'Play again';
   overlayEl.classList.remove('hidden');
 }
@@ -94,9 +102,14 @@ function animate(currentTime) {
       const dx = player.position.x - c.position.x;
       const dz = player.position.z - c.position.z;
       if (Math.hypot(dx, dz) < COLLECT_DISTANCE) {
-        score += 1;
+        if (c.userData.type === 'bad') {
+          score = Math.max(0, score - BAD_PENALTY);
+          flashRed();
+        } else {
+          score += 1;
+        }
         scoreEl.textContent = score;
-        respawnCollectible(c);
+        respawnCollectible(c, player.position);
       }
     }
 
