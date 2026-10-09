@@ -9,20 +9,41 @@
 </head>
 
 <body>
-  <div id="hud">
+  <div id="flash"></div>
+  <div id="joystick"><div id="stick"></div></div>
+
+  <div id="hud" class="hidden">
     <div>Score: <span id="score">0</span></div>
     <div>Time: <span id="timer">30</span></div>
+    <div>Best: <span id="best">0</span></div>
   </div>
 
-  <div id="flash"></div>
-  <div id="joystick">
-    <div id="stick"></div>
-  </div>
-
-  <div id="overlay">
-    <h1 id="overlayTitle">Collector</h1>
-    <p id="overlayText">WASD or arrows to move. Grab the cyan gems, avoid the red ones (-5).</p>
+  <!-- Training start / game over screen -->
+  <div id="overlay" class="hidden">
+    <h1 id="overlayTitle">Training</h1>
+    <p id="overlayText"></p>
+    <div id="durationPicker">
+      <button class="durBtn" data-seconds="15">15s</button>
+      <button class="durBtn" data-seconds="30">30s</button>
+      <button class="durBtn" data-seconds="60">60s</button>
+    </div>
+    <p id="bestText"></p>
     <button id="startBtn">Press to start</button>
+    <button id="backBtn" class="linkBtn">← Back to menu</button>
+  </div>
+
+  <!-- Mode select -->
+  <div id="modeMenu">
+    <h1>Collector</h1>
+    <p>Pick a mode</p>
+    <button class="modeBtn" data-mode="training">
+      Training
+      <small>Timed rounds · avoid the red gems</small>
+    </button>
+    <button class="modeBtn" disabled>
+      Endless Dash
+      <small>Coming soon</small>
+    </button>
   </div>
 
   <script type="module" src="/src/main.js"></script>
