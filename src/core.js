@@ -20,9 +20,10 @@ export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+export const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+export const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
 sunLight.position.set(5, 10, 5);
 scene.add(sunLight);
 

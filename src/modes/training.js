@@ -16,6 +16,7 @@ const DURATIONS = [15, 30, 60];
 
 const hudEl = document.getElementById('hud');
 const scoreEl = document.getElementById('score');
+const coinsEl = document.getElementById('coins');
 const timerEl = document.getElementById('timer');
 const bestEl = document.getElementById('best');
 const bestTextEl = document.getElementById('bestText');
@@ -28,6 +29,7 @@ const durBtns = document.querySelectorAll('.durBtn');
 
 let phase = 'ready';
 let score = 0;
+let coins = 0;
 let best = 0;
 const savedDuration = loadNumber('training:duration', 30);
 let gameDuration = DURATIONS.includes(savedDuration) ? savedDuration : 30;
@@ -72,10 +74,13 @@ durBtns.forEach((b) =>
 function resetRound() {
     score = 0;
     scoreEl.textContent = score;
+    coins = 0;
+    coinsEl.textContent = coins;
     timeLeft = gameDuration;
     timerEl.textContent = gameDuration;
 
     player.position.set(0, 0.5, 0);
+    player.rotation.y = Math.PI;
     for (const k in keys) keys[k] = false;
     for (const c of collectibles) respawnCollectible(c, player.position);
 }
@@ -84,7 +89,7 @@ function showReadyScreen() {
     phase = 'ready';
     overlayTitleEl.textContent = 'Training';
     overlayTextEl.textContent =
-        'WASD or arrows to move. Grab the cyan gems, avoid the red ones (-5).';
+        'WASD or arrows to move. Grab the gold coins, avoid the red orbs (-5).';
     startBtn.textContent = 'Press to start';
     overlayEl.classList.remove('hidden');
 }
@@ -107,7 +112,7 @@ function endGame() {
     renderBest();
 
     overlayTitleEl.textContent = isNewBest ? 'New high score!' : "Time's up!";
-    overlayTextEl.textContent = `Final score: ${score}`;
+    overlayTextEl.textContent = `Final score: ${score} · ${coins} coins`;
     startBtn.textContent = 'Play again';
     overlayEl.classList.remove('hidden');
 }
@@ -139,8 +144,12 @@ export const training = {
 
     update(delta, time) {
         animateGems(delta, time);
+        player.userData.update(delta);
 
-        if (phase !== 'playing') return;
+        if (phase !== 'playing') {
+            player.userData.setState('idle');
+            return;
+        }
 
         let moveX = 0;
         let moveZ = 0;
@@ -158,6 +167,15 @@ export const training = {
             moveZ = joy.z;
         }
 
+        const moving = Math.hypot(moveX, moveZ) > 0.1;
+        player.userData.setState(moving ? 'run' : 'idle');
+        if (moving) {
+            const targetYaw = Math.atan2(moveX, moveZ);
+            let diff = targetYaw - player.rotation.y;
+            diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+            player.rotation.y += diff * Math.min(1, 12 * delta);
+        }
+
         player.position.x += moveX * PLAYER_SPEED * delta;
         player.position.z += moveZ * PLAYER_SPEED * delta;
         player.position.x = THREE.MathUtils.clamp(player.position.x, -BOUNDARY, BOUNDARY);
@@ -172,6 +190,8 @@ export const training = {
                     flashRed();
                 } else {
                     score += 1;
+                    coins += 1;
+                    coinsEl.textContent = coins;
                 }
                 scoreEl.textContent = score;
                 respawnCollectible(c, player.position);

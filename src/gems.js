@@ -6,24 +6,68 @@ const GOOD_COUNT = 5;
 const BAD_COUNT = 3;
 const MIN_SPAWN_DISTANCE = 3;
 
-export const goodGeometry = new THREE.OctahedronGeometry(0.4);
-export const goodMaterial = new THREE.MeshStandardMaterial({
-    color: 0x4df2ff,
-    emissive: 0x4df2ff,
-    emissiveIntensity: 2.0,
-    metalness: 0.3,
-    roughness: 0.15,
-    flatShading: true,
+function createCoinTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#ffcf4a';
+    ctx.fillRect(0, 0, 128, 128);
+
+    ctx.strokeStyle = '#c98a12';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.arc(64, 64, 54, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(64, 64, 36, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#c98a12';
+    ctx.beginPath();
+    ctx.moveTo(64, 44);
+    ctx.lineTo(80, 64);
+    ctx.lineTo(64, 84);
+    ctx.lineTo(48, 64);
+    ctx.closePath();
+    ctx.fill();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+}
+
+const coinTexture = createCoinTexture();
+
+const coinEdgeMaterial = new THREE.MeshStandardMaterial({
+    color: 0xe0a020,
+    emissive: 0xffa800,
+    emissiveIntensity: 1.5,
+    metalness: 0.4,
+    roughness: 0.35,
+});
+const coinFaceMaterial = new THREE.MeshStandardMaterial({
+    map: coinTexture,
+    emissive: 0xffffff,
+    emissiveMap: coinTexture,
+    emissiveIntensity: 1.8,
+    metalness: 0.4,
+    roughness: 0.35,
 });
 
-export const badGeometry = new THREE.TetrahedronGeometry(0.55);
+export const goodGeometry = new THREE.CylinderGeometry(0.45, 0.45, 0.1, 32).rotateX(Math.PI / 2);
+export const goodMaterial = [coinEdgeMaterial, coinFaceMaterial, coinFaceMaterial];
+
+export const badGeometry = new THREE.SphereGeometry(0.5, 24, 24);
 export const badMaterial = new THREE.MeshStandardMaterial({
     color: 0xff3355,
-    emissive: 0xff3355,
+    emissive: 0xff1a3d,
     emissiveIntensity: 2.0,
-    metalness: 0.3,
-    roughness: 0.15,
-    flatShading: true,
+    metalness: 0.1,
+    roughness: 0.35,
 });
 
 export function randomArenaPosition() {
