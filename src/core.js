@@ -20,29 +20,26 @@ export const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Lights
 scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
 const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
 sunLight.position.set(5, 10, 5);
 scene.add(sunLight);
 
-// Post-processing: render the scene, add bloom (glow), then output to screen
-const BLOOM_ENABLED = true; // flip to false if it runs slow on a phone
+const BLOOM_ENABLED = true;
 
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 
 const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.8, // strength: how strong the glow is
-    0.5, // radius: how far it spreads
-    0.9  // threshold: only things brighter than this glow
+    0.8,
+    0.5,
+    0.9
 );
 composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 
-// main.js calls this every frame instead of renderer.render
 export function render(delta) {
     if (BLOOM_ENABLED) {
         composer.render(delta);
@@ -51,7 +48,6 @@ export function render(delta) {
     }
 }
 
-// Keep things correct when the window is resized
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();

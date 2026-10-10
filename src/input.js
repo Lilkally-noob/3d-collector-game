@@ -1,4 +1,3 @@
-// Keyboard
 export const keys = {};
 
 window.addEventListener('keydown', (e) => {
@@ -11,8 +10,7 @@ window.addEventListener('blur', () => {
     for (const code in keys) keys[code] = false;
 });
 
-// Touch joystick
-export const joy = { x: 0, z: 0 }; // values from -1 to 1
+export const joy = { x: 0, z: 0 };
 
 const joystickEl = document.getElementById('joystick');
 const stickEl = document.getElementById('stick');

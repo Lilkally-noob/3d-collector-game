@@ -1,4 +1,3 @@
-// Safe wrappers: localStorage can throw (private mode, storage full), so never trust it blindly
 export function loadNumber(key, fallback = 0) {
     try {
         const raw = localStorage.getItem(key);
@@ -14,6 +13,5 @@ export function saveNumber(key, value) {
     try {
         localStorage.setItem(key, String(value));
     } catch {
-        // ignore: the game still works, it just won't remember
     }
 }

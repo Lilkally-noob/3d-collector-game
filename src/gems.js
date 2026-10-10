@@ -4,11 +4,10 @@ import { BOUNDARY } from './arena.js';
 
 const GOOD_COUNT = 5;
 const BAD_COUNT = 3;
-const MIN_SPAWN_DISTANCE = 3; // gems won't respawn closer than this to the player
+const MIN_SPAWN_DISTANCE = 3;
 
-// Good gems: cyan octahedron
-const goodGeometry = new THREE.OctahedronGeometry(0.4);
-const goodMaterial = new THREE.MeshStandardMaterial({
+export const goodGeometry = new THREE.OctahedronGeometry(0.4);
+export const goodMaterial = new THREE.MeshStandardMaterial({
     color: 0x4df2ff,
     emissive: 0x4df2ff,
     emissiveIntensity: 2.0,
@@ -17,9 +16,8 @@ const goodMaterial = new THREE.MeshStandardMaterial({
     flatShading: true,
 });
 
-// Bad gems: red, spiky tetrahedron (different SHAPE too, not just color)
-const badGeometry = new THREE.TetrahedronGeometry(0.55);
-const badMaterial = new THREE.MeshStandardMaterial({
+export const badGeometry = new THREE.TetrahedronGeometry(0.55);
+export const badMaterial = new THREE.MeshStandardMaterial({
     color: 0xff3355,
     emissive: 0xff3355,
     emissiveIntensity: 2.0,
@@ -44,7 +42,7 @@ function createGem(type) {
     const pos = randomArenaPosition();
     mesh.position.set(pos.x, 0.8, pos.z);
     mesh.userData.phase = Math.random() * Math.PI * 2;
-    mesh.userData.type = type; // 'good' or 'bad'
+    mesh.userData.type = type;
     return mesh;
 }
 
@@ -61,7 +59,6 @@ function addGems(type, count) {
 addGems('good', GOOD_COUNT);
 addGems('bad', BAD_COUNT);
 
-// `avoid` is an optional position (like the player's) to stay away from
 export function respawnCollectible(c, avoid) {
     let pos;
     for (let i = 0; i < 10; i++) {
@@ -72,7 +69,6 @@ export function respawnCollectible(c, avoid) {
     c.position.z = pos.z;
 }
 
-// Spin + bob. `time` is in seconds.
 export function animateGems(delta, time) {
     for (const c of collectibles) {
         c.rotation.y += 2 * delta;

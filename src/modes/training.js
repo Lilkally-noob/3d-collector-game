@@ -6,17 +6,14 @@ import { createPlayer } from '../player.js';
 import { collectibles, respawnCollectible, animateGems } from '../gems.js';
 import { loadNumber, saveNumber } from '../storage.js';
 
-// Player
 const player = createPlayer();
 scene.add(player);
 
-// Settings
 const PLAYER_SPEED = 8;
 const COLLECT_DISTANCE = 1.0;
 const BAD_PENALTY = 5;
 const DURATIONS = [15, 30, 60];
 
-// UI elements
 const hudEl = document.getElementById('hud');
 const scoreEl = document.getElementById('score');
 const timerEl = document.getElementById('timer');
@@ -29,15 +26,13 @@ const startBtn = document.getElementById('startBtn');
 const flashEl = document.getElementById('flash');
 const durBtns = document.querySelectorAll('.durBtn');
 
-// State
-let phase = 'ready'; // 'ready' | 'playing' | 'gameover'
+let phase = 'ready';
 let score = 0;
 let best = 0;
 const savedDuration = loadNumber('training:duration', 30);
 let gameDuration = DURATIONS.includes(savedDuration) ? savedDuration : 30;
 let timeLeft = gameDuration;
 
-// World visibility (so other modes can hide training's world)
 function setWorldVisible(visible) {
     ground.visible = visible;
     player.visible = visible;
@@ -46,11 +41,10 @@ function setWorldVisible(visible) {
 
 function flashRed() {
     flashEl.classList.remove('active');
-    void flashEl.offsetWidth; // forces the browser to reset so the animation can replay
+    void flashEl.offsetWidth;
     flashEl.classList.add('active');
 }
 
-// High score + duration picker
 function bestKey() {
     return `training:best:${gameDuration}`;
 }
@@ -75,7 +69,6 @@ durBtns.forEach((b) =>
     b.addEventListener('click', () => selectDuration(Number(b.dataset.seconds)))
 );
 
-// Round lifecycle
 function resetRound() {
     score = 0;
     scoreEl.textContent = score;
@@ -121,13 +114,11 @@ function endGame() {
 
 startBtn.addEventListener('click', startGame);
 
-// Start hidden; main.js calls enter() when the player picks this mode
 setWorldVisible(false);
 selectDuration(gameDuration);
 
-// The "mode contract": main.js only relies on these four things
 export const training = {
-    focus: player, // what the camera follows
+    focus: player,
     cameraOffset: new THREE.Vector3(0, 10, 12),
 
     enter() {

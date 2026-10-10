@@ -10,7 +10,9 @@
 
 <body>
   <div id="flash"></div>
-  <div id="joystick"><div id="stick"></div></div>
+  <div id="joystick">
+    <div id="stick"></div>
+  </div>
 
   <div id="hud" class="hidden">
     <div>Score: <span id="score">0</span></div>
@@ -29,10 +31,19 @@
     </div>
     <p id="bestText"></p>
     <button id="startBtn">Press to start</button>
-    <button id="backBtn" class="linkBtn">← Back to menu</button>
+    <button class="linkBtn backBtn">← Back to menu</button>
   </div>
 
   <!-- Mode select -->
+  <div id="dashOverlay" class="hidden">
+    <h1 id="dashTitle">Endless Dash</h1>
+    <p id="dashText"></p>
+    <p id="dashBestText"></p>
+    <button id="dashStartBtn">Press to start</button>
+    <button class="linkBtn backBtn">← Back to menu</button>
+  </div>
+  <button id="quitBtn" class="hidden">Quit run</button>
+
   <div id="modeMenu">
     <h1>Collector</h1>
     <p>Pick a mode</p>
@@ -40,9 +51,9 @@
       Training
       <small>Timed rounds · avoid the red gems</small>
     </button>
-    <button class="modeBtn" disabled>
+    <button class="modeBtn" data-mode="dash">
       Endless Dash
-      <small>Coming soon</small>
+      <small>Non-stop run · steer left and right</small>
     </button>
   </div>
 
