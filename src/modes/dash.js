@@ -1,15 +1,15 @@
 import * as THREE from 'three';
 import { scene, camera, ambientLight, sunLight } from '../core.js';
-import { keys, joy } from '../input.js';
+import { keys, setTouchMode, consumeLaneMove, clearLaneMoves } from '../input.js';
 import { createPlayer } from '../player.js';
 import { goodGeometry, goodMaterial, badGeometry, badMaterial } from '../gems.js';
 import { loadNumber, saveNumber } from '../storage.js';
 
 const ROAD_WIDTH = 10;
-const MAX_X = ROAD_WIDTH / 2 - 0.7;
+const LANE_WIDTH = 3.4;
+const LANE_SMOOTHNESS = 14;
 const TILE_LENGTH = 20;
 const TILE_COUNT = 8;
-const STEER_SPEED = 9;
 const START_SPEED = 12;
 const MAX_SPEED = 28;
 const ACCELERATION = 0.35;
@@ -268,6 +268,7 @@ let speed = START_SPEED;
 let distance = 0;
 let gemsCollected = 0;
 let score = 0;
+let lane = 0;
 let best = loadNumber('dash:best', 0);
 
 const saved = {};
@@ -278,10 +279,11 @@ function badChance() {
 
 function placeGem(gem, z) {
     const isBad = Math.random() < badChance();
+    const gemLane = Math.floor(Math.random() * 3) - 1;
     gem.geometry = isBad ? badGeometry : goodGeometry;
     gem.material = isBad ? badMaterial : goodMaterial;
     gem.userData.type = isBad ? 'bad' : 'good';
-    gem.position.set((Math.random() * 2 - 1) * MAX_X, GEM_Y, z);
+    gem.position.set(gemLane * LANE_WIDTH, GEM_Y, z);
 }
 
 function recycleGems() {
@@ -312,6 +314,7 @@ function resetRun() {
     distance = 0;
     gemsCollected = 0;
     score = 0;
+    lane = 0;
 
     player.position.set(0, 0.5, 0);
     player.rotation.set(0, Math.PI, 0);
@@ -326,6 +329,7 @@ function resetRun() {
     scoreEl.textContent = 0;
     coinsEl.textContent = 0;
     for (const k in keys) keys[k] = false;
+    clearLaneMoves();
 }
 
 function showReady() {
@@ -334,7 +338,7 @@ function showReady() {
     renderBest();
     dashTitleEl.textContent = 'Endless Dash';
     dashTextEl.textContent =
-        'Steer with A / D or the arrow keys (the joystick on phones). Gold coins are +10. Hit a red orb and the run is over.';
+        'Swipe left or right (or tap A / D or the arrow keys) to change lanes. Gold coins are +10. Hit a red orb and the run is over.';
     dashStartBtn.textContent = 'Press to start';
     quitBtn.classList.add('hidden');
     dashOverlayEl.classList.remove('hidden');
@@ -393,6 +397,7 @@ export const dash = {
 
         camera.fov = FOV_BASE;
         camera.updateProjectionMatrix();
+        setTouchMode('swipe');
 
         world.visible = true;
         hudEl.classList.remove('hidden');
@@ -417,6 +422,7 @@ export const dash = {
 
         camera.fov = FOV_BASE;
         camera.updateProjectionMatrix();
+        setTouchMode('stick');
 
         world.visible = false;
         hudEl.classList.add('hidden');
@@ -425,6 +431,7 @@ export const dash = {
         quitBtn.classList.add('hidden');
         phase = 'ready';
         for (const k in keys) keys[k] = false;
+        clearLaneMoves();
     },
 
     update(delta, time) {
@@ -436,16 +443,17 @@ export const dash = {
         player.userData.update(delta);
         player.userData.setState(phase === 'running' ? 'run' : 'idle');
 
+        if (phase !== 'running') clearLaneMoves();
+
         if (phase === 'running') {
-            let steer = 0;
-            if (keys['KeyA'] || keys['ArrowLeft']) steer -= 1;
-            if (keys['KeyD'] || keys['ArrowRight']) steer += 1;
-            if (steer === 0) steer = joy.x;
+            const move = consumeLaneMove();
+            if (move !== 0) lane = THREE.MathUtils.clamp(lane + move, -1, 1);
 
-            player.position.x += steer * STEER_SPEED * delta;
-            player.position.x = THREE.MathUtils.clamp(player.position.x, -MAX_X, MAX_X);
+            const prevX = player.position.x;
+            player.position.x += (lane * LANE_WIDTH - prevX) * Math.min(1, LANE_SMOOTHNESS * delta);
 
-            const targetLean = steer * 0.35;
+            const velocityX = delta > 0 ? (player.position.x - prevX) / delta : 0;
+            const targetLean = THREE.MathUtils.clamp(velocityX * 0.04, -0.35, 0.35);
             player.rotation.z += (targetLean - player.rotation.z) * Math.min(1, 10 * delta);
 
             speed = Math.min(MAX_SPEED, speed + ACCELERATION * delta);
