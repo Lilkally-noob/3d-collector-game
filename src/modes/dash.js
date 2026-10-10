@@ -14,6 +14,8 @@ const START_SPEED = 12;
 const MAX_SPEED = 28;
 const ACCELERATION = 0.35;
 const LOOK_AHEAD = 7;
+const FOV_BASE = 60;
+const FOV_BOOST = 14;
 
 const GEM_COUNT = 16;
 const GEM_SPACING = 8;
@@ -43,10 +45,31 @@ scene.add(world);
 const sideFloorGeo = new THREE.PlaneGeometry(90, TILE_LENGTH);
 const sideFloorMat = new THREE.MeshStandardMaterial({ color: 0x0c0c24 });
 const roadGeo = new THREE.PlaneGeometry(ROAD_WIDTH, TILE_LENGTH);
+
+function createLaneTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, 128, 256);
+    ctx.fillStyle = '#4df2ff';
+    for (let y = 0; y < 256; y += 64) {
+        ctx.fillRect(41, y, 3, 32);
+        ctx.fillRect(84, y, 3, 32);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+}
+
 const roadMat = new THREE.MeshStandardMaterial({
     color: 0x1b1b3a,
     roughness: 0.6,
     metalness: 0.3,
+    emissive: 0xffffff,
+    emissiveMap: createLaneTexture(),
+    emissiveIntensity: 1.8,
 });
 const edgeGeo = new THREE.BoxGeometry(0.2, 0.2, TILE_LENGTH);
 const edgeMat = new THREE.MeshStandardMaterial({
@@ -122,6 +145,32 @@ for (let i = 0; i < GEM_COUNT; i++) {
 
 const player = createPlayer();
 world.add(player);
+
+const STAR_COUNT = 700;
+const starPositions = new Float32Array(STAR_COUNT * 3);
+for (let i = 0; i < STAR_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const elevation = 0.05 + Math.random() * 0.95;
+    const flat = Math.sqrt(1 - elevation * elevation);
+    starPositions[i * 3] = Math.cos(angle) * flat * 400;
+    starPositions[i * 3 + 1] = elevation * 400;
+    starPositions[i * 3 + 2] = Math.sin(angle) * flat * 400;
+}
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+const stars = new THREE.Points(
+    starGeo,
+    new THREE.PointsMaterial({ color: 0xffffff, size: 2, sizeAttenuation: false, fog: false })
+);
+world.add(stars);
+
+const sunMat = new THREE.MeshBasicMaterial({ color: 0xff2fd6, fog: false });
+sunMat.color.multiplyScalar(2.5);
+const sun = new THREE.Mesh(new THREE.CircleGeometry(40, 48), sunMat);
+world.add(sun);
+
+const glow = new THREE.PointLight(0x4df2ff, 40, 30);
+world.add(glow);
 
 const focus = new THREE.Object3D();
 const cameraOffset = new THREE.Vector3(0, 6, 15);
@@ -241,6 +290,8 @@ export const dash = {
         saved.fog = scene.fog;
         scene.background = new THREE.Color(0x07071a);
         scene.fog = new THREE.Fog(0x07071a, 25, 95);
+        camera.fov = FOV_BASE;
+        camera.updateProjectionMatrix();
 
         world.visible = true;
         hudEl.classList.remove('hidden');
@@ -257,6 +308,8 @@ export const dash = {
     exit() {
         scene.background = saved.background;
         scene.fog = saved.fog;
+        camera.fov = FOV_BASE;
+        camera.updateProjectionMatrix();
 
         world.visible = false;
         hudEl.classList.add('hidden');
@@ -299,7 +352,7 @@ export const dash = {
             for (const g of gems) {
                 const dx = player.position.x - g.position.x;
                 const dz = player.position.z - g.position.z;
-                if (Math.abs(dx) < HIT_X && Math.abs(dz) < HIT_Z + speed * delta) {
+                if (Math.abs(dx) < HIT_X && dz < HIT_Z && dz > -(HIT_Z + speed * delta)) {
                     if (g.userData.type === 'bad') {
                         score = Math.floor(distance) + gemsCollected * GEM_VALUE;
                         crash();
@@ -318,5 +371,12 @@ export const dash = {
         }
 
         focus.position.set(player.position.x, 1, player.position.z - LOOK_AHEAD);
+        sun.position.set(0, 50, player.position.z - 350);
+        stars.position.set(player.position.x, 0, player.position.z);
+        glow.position.set(player.position.x, 3, player.position.z);
+
+        const speedRatio = phase === 'running' ? (speed - START_SPEED) / (MAX_SPEED - START_SPEED) : 0;
+        camera.fov += (FOV_BASE + speedRatio * FOV_BOOST - camera.fov) * Math.min(1, 3 * delta);
+        camera.updateProjectionMatrix();
     },
 };
