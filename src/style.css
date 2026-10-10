@@ -88,12 +88,6 @@ body {
   pointer-events: none;
 }
 
-@media (pointer: coarse) {
-  #joystick {
-    display: block;
-  }
-}
-
 #flash {
   position: fixed;
   inset: 0;
@@ -244,4 +238,19 @@ body {
 
 #coin {
   color: #ffcf4a;
+}
+
+#joystick {
+  display: none;
+  position: fixed;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+#joystick.active {
+  display: block;
 }

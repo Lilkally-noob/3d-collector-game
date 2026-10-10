@@ -14,13 +14,15 @@ export const joy = { x: 0, z: 0 };
 
 const joystickEl = document.getElementById('joystick');
 const stickEl = document.getElementById('stick');
+const RING_RADIUS = 60;
 const JOY_RADIUS = 45;
-let joyPointerId = null;
+let activeId = null;
+let originX = 0;
+let originY = 0;
 
 function updateJoystick(e) {
-    const rect = joystickEl.getBoundingClientRect();
-    let dx = e.clientX - (rect.left + rect.width / 2);
-    let dy = e.clientY - (rect.top + rect.height / 2);
+    let dx = e.clientX - originX;
+    let dy = e.clientY - originY;
 
     const dist = Math.hypot(dx, dy);
     if (dist > JOY_RADIUS) {
@@ -33,20 +35,31 @@ function updateJoystick(e) {
     joy.z = dy / JOY_RADIUS;
 }
 
-function resetJoystick() {
-    joyPointerId = null;
+function endJoystick(e) {
+    if (e.pointerId !== activeId) return;
+    activeId = null;
     joy.x = 0;
     joy.z = 0;
     stickEl.style.transform = 'translate(0px, 0px)';
+    joystickEl.classList.remove('active');
 }
 
-joystickEl.addEventListener('pointerdown', (e) => {
-    joyPointerId = e.pointerId;
-    joystickEl.setPointerCapture(e.pointerId);
+window.addEventListener('pointerdown', (e) => {
+    if (activeId !== null) return;
+    if (e.pointerType === 'mouse') return;
+    if (e.target.tagName !== 'CANVAS') return;
+
+    activeId = e.pointerId;
+    originX = e.clientX;
+    originY = e.clientY;
+    joystickEl.style.left = `${originX - RING_RADIUS}px`;
+    joystickEl.style.top = `${originY - RING_RADIUS}px`;
+    joystickEl.classList.add('active');
     updateJoystick(e);
 });
-joystickEl.addEventListener('pointermove', (e) => {
-    if (e.pointerId === joyPointerId) updateJoystick(e);
+
+window.addEventListener('pointermove', (e) => {
+    if (e.pointerId === activeId) updateJoystick(e);
 });
-joystickEl.addEventListener('pointerup', resetJoystick);
-joystickEl.addEventListener('pointercancel', resetJoystick);
+window.addEventListener('pointerup', endJoystick);
+window.addEventListener('pointercancel', endJoystick);
